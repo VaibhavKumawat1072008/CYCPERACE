@@ -104,7 +104,8 @@ function spawnDoors()
     invisibleBlock.velocityY = 1;
 
     //change the depth of the ghost and door
-    
+    climber.depth = ghost.depth
+    ghost.depth = ghost.depth+1;
      
 
     
