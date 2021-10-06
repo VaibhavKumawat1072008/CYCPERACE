@@ -1,118 +1,241 @@
-  
-var towerImg, tower;
-var doorImg, door, doorsGroup;
-var climberImg, climber, climbersGroup;
-var ghost, ghostImg;
-var invisibleBlockGroup, invisibleBlock;
-var gameState = "play"
-var collideBar;
+var path,mainCyclist;
+var player1,player2,player3;
+var pathImg,mainRacerImg1,mainRacerImg2;
 
+var oppPink1Img,oppPink2Img;
+var oppYellow1Img,oppYellow2Img;
+var oppRed1Img,oppRed2Img;
+var gameOverImg,cycleBell;
+
+var pinkCG, yellowCG,redCG; 
+
+var END =0;
+var PLAY =1;
+var gameState = PLAY;
+
+var distance=0;
+var gameOver, restart;
 
 function preload(){
-  towerImg = loadImage("tower.png");
-  doorImg = loadImage("door.png");
-  climberImg = loadImage("climber.png");
-  ghostImg = loadImage("ghost-standing.png");
-  spookySound = loadSound("spooky.wav");
+  pathImg = loadImage("Road.png");
+  mainRacerImg1 = loadAnimation("mainPlayer1.png","mainPlayer2.png");
+  mainRacerImg2= loadAnimation("mainPlayer3.png");
+  
+  oppPink1Img = loadAnimation("opponent1.png","opponent2.png");
+  oppPink2Img = loadAnimation("opponent3.png");
+  
+  oppYellow1Img = loadAnimation("opponent4.png","opponent5.png");
+  oppYellow2Img = loadAnimation("opponent6.png");
+  
+  oppRed1Img = loadAnimation("opponent7.png","opponent8.png");
+  oppRed2Img = loadAnimation("opponent9.png");
+  
+  cycleBell = loadSound("bell.mp3");
+  gameOverImg = loadImage("gameOver.png");
 }
 
-function setup() {
-  createCanvas(600,600);
-  spookySound.loop();
-  tower = createSprite(300,300);
-  tower.addImage("tower",towerImg);
-  tower.velocityY = 1;
+function setup(){
+  
+createCanvas(1200,300);
+// Moving background
+path=createSprite(100,150);
+path.addImage(pathImg);
+path.velocityX = -5;
 
-  //collideBar = createSprite(300,590,600,10);
+//creating boy running
+mainCyclist  = createSprite(70,150);
+mainCyclist.addAnimation("SahilRunning",mainRacerImg1);
+mainCyclist.scale=0.07;
+  
+//set collider for mainCyclist
+
+//mainCyclist.setCollission("rectangle",0,0,40,40);
+//mainCyclist.setCollider("rectangle",0,0,40,40);
+//mainCyclist.setCollission("rectangle",0,0,40,40,50);
+//mainCyclist.setCollider("rectangle",0,0,40,40,50);
 
   
-  doorsGroup = new Group();
-  climbersGroup = new Group();
-  invisibleBlockGroup = new Group();
+gameOver = createSprite(650,150);
+gameOver.addImage(gameOverImg);
+gameOver.scale = 0.8;
+gameOver.visible = false;  
   
-  ghost = createSprite(200,200,50,50);
-  ghost.scale = 0.3;
-  ghost.addImage("ghost", ghostImg);
-  //ghost.collide("collideBar");
+pinkCG = new Group();
+yellowCG = new Group();
+redCG = new Group();
+  
 }
-
 
 function draw() {
-  background(255);
-  
-  if (gameState === "play") {
-    
-    if(keyDown("left")){
-      ghost.x = ghost.x-5;
-    }
-    if(keyDown("right")){
-      ghost.x = ghost.x+5;
-    }
-    if(keyDown("space")){
-     ghost.velocityY = -10;      
-    }
-
-   
-
-  
-  ghost.velocityY = ghost.velocityY + 0.8;
-  
-   
-      //write a condition for infinte scrolling tower
-      if(tower.y>400){
-        tower.y = 300;
-      }
-
-      spawnDoors();
-
-  
-      //write a code to make climbersGroup collide with ghost change the ghost velocity
-
-      if(climbersGroup.isTouching("ghost")){
-        ghost.velocityY = 0;
-      } 
-      
-//write a code to make invisibleBlockGroup collide with ghost destroy the ghost and make gamestate to end.
+  background(0);
   
   drawSprites();
-}
-  if (gameState === "end"){
-    stroke("yellow");
-    fill("yellow");
-    textSize(30);
-    text("Game Over", 230,250)
-  }
-}
-
-function spawnDoors()
- {
-  //write code here to spawn the clouds
-  if (frameCount % 240 === 0) {
-    var door = createSprite(200, -50);
-    var climber = createSprite(200,10);
-    var invisibleBlock = createSprite(200,15);
-    invisibleBlock.width = climber.width;
-    invisibleBlock.height = 2;
-    //add the random function
-    //
-    door.addImage(doorImg);
-    climber.addImage(climberImg);
+  textSize(20);
+  fill(255);
+  text("Distance: "+ distance,900,30);
+  
+  if(gameState===PLAY){
     
-    climbersGroup.add(climber);
-    door.velocityY = 1;
-    climber.velocityY = 1;
-    invisibleBlock.velocityY = 1;
-
-    //change the depth of the ghost and door
-    climber.depth = ghost.depth
-    ghost.depth = ghost.depth+1;
-     
-
-    
-    //assign lifetime to the obstacle.lifetime = 300; here  obstacle are door, climber and invisible block
-
-
-    //add each obstacle to the group obstaclesGroup.add(obstacle);here  obstacle are door, climber and invisible block
+   distance = distance + Math.round(getFrameRate()/50);
+   path.velocityX = -(6 + 2*distance/150);
+  
+   mainCyclist.y = World.mouseY;
+  
+   edges= createEdgeSprites();
+   mainCyclist .collide(edges);
+  
+  //code to reset the background
+  if(path.x < 0 ){
+    path.x = width/2;
   }
+  
+    //code to play cycle bell sound
+  if(keyDown("space")) {
+    cycleBell.play();
+  }
+  
+  //creating continous opponent players
+  var select_oppPlayer = Math.round(random(1,3));
+  
+  if (World.frameCount % 150 == 0) {
+    if (select_oppPlayer == 1) {
+      pinkCyclists();
+    } else if (select_oppPlayer == 2) {
+      yellowCyclists();
+    } else {
+      redCyclists();
+    }
+  }
+  
+   if(pinkCG.isTouching(mainCyclist)){
+     gameState = END;
+     player1.velocityY = 0;
+     player1.addAnimation("opponentPlayer1",oppPink2Img);
+    }
+    
+    if(yellowCG.isTouching(mainCyclist)){
+      gameState = END;
+      player2.velocityY = 0;
+      player2.addAnimation("opponentPlayer2",oppYellow2Img);
+    }
+    
+    if(redCG.isTouching(mainCyclist)){
+      gameState = END;
+      player3.velocityY = 0;
+      player3.addAnimation("opponentPlayer3",oppRed2Img);
+    }
+    
+}else if (gameState === END) {
+    gameOver.visible = true;
+  
+    textSize(20);
+    fill(255);
+    text("Press Space Arrow to Restart the game!", 500,200);
+  
+    path.velocityX = 0;
+    mainCyclist.velocityY = 0;
+    mainCyclist.addAnimation("SahilRunning",mainRacerImg2);
+  
+    pinkCG.setVelocityXEach(0);
+    pinkCG.setLifetimeEach(-1);
+  
+    yellowCG.setVelocityXEach(0);
+    yellowCG.setLifetimeEach(-1);
+  
+    redCG.setVelocityXEach(0);
+    redCG.setLifetimeEach(-1);
+    
+     //if(keyDown("SPACE")) {
+     //  reset;
+     //}
+
+     //if(key("UP_ARROW")) {
+    //   reset();
+    // }
+
+    // if(keyDown()) {
+    //   reset();
+    // }
+
+     if(keyDown("UP_ARROW")) {
+       reset();
+     }
 }
+}
+
+function pinkCyclists(){
+        player1 =createSprite(1100,Math.round(random(50, 250)));
+        player1.scale =0.06;
+        player1.velocityX = -(6 + 2*distance/150);
+        player1.addAnimation("opponentPlayer1",oppPink1Img);
+        player1.setLifetime=170;
+        pinkCG.add(player1);
+}
+
+function yellowCyclists(){
+        player2 =createSprite(1100,Math.round(random(50, 250)));
+        player2.scale =0.06;
+        player2.velocityX = -(6 + 2*distance/150);
+        player2.addAnimation("opponentPlayer2",oppYellow1Img);
+        player2.setLifetime=170;
+        yellowCG.add(player2);
+}
+
+function redCyclists(){
+        player3 =createSprite(1100,Math.round(random(50, 250)));
+        player3.scale =0.06;
+        player3.velocityX = -(6 + 2*distance/150);
+        player3.addAnimation("opponentPlayer3",oppRed1Img);
+        player3.setLifetime=170;
+        redCG.add(player3);
+}
+
+//function reset{
+//  gameState = END;
+//  gameOver.visible = false;
+//  mainCyclist.addAnimation("SahilRunning",mainRacerImg1);
+  
+//  pinkCG.destroyEach();
+//  yellowCG.destroyEach();
+//  redCG.destroyEach();
+  
+//  distance = 0;
+// }
+
+//function reset{
+//  gameState = PLAY;
+//  gameOver.visible = true;
+//  mainCyclist.addAnimation("SahilRunning",mainRacerImg1);
+  
+//  pinkCG.destroy();
+//  yellowCG.destroy();
+//  redCG.destroy();
+  
+//  distance = 0;
+// }
+
+function reset(){
+  gameState = PLAY;
+  gameOver.visible = false;
+  mainCyclist.addAnimation("SahilRunning",mainRacerImg1);
+ 
+  pinkCG.destroyEach();
+  yellowCG.destroyEach();
+  redCG.destroyEach();
+  
+  distance = 0;
+}
+
+//function reset(){
+//  gameState = END;
+//  gameOver.visible = true;
+//  mainCyclist.addAnimation("SahilRunning",mainRacerImg1);
+  
+//  pinkCG.destroyEach();
+//  yellowCG.destroyEach();
+//  redCG.destroyEach();
+  
+//  distance = 50;
+// }
+
 
